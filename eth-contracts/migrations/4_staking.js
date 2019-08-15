@@ -17,12 +17,12 @@ function encodeCall (name, args, values) {
 module.exports = (deployer, network, accounts) => {
   deployer.then(async () => {
     let registry = await Registry.deployed()
+
     // const networkId = Registry.network_id
     const config = contractConfig[network]
     const treasuryAddress = config.treasuryAddress || accounts[0]
-    const versionerAddress = config.versionerAddress || accounts[0]
 
-    const token = await AudiusToken.deployed()
+    // const token = await AudiusToken.deployed()
     let staking = await deployer.deploy(Staking)
     let ownedUpgradeabilityProxy = await deployer.deploy(OwnedUpgradeabilityProxy)
 
@@ -31,16 +31,20 @@ module.exports = (deployer, network, accounts) => {
       ownedUpgradeabilityProxyKey,
       ownedUpgradeabilityProxy.address)
 
+    let tokenAddress = '0x65ca91574256b2c194a964e340e8b0a802e17ec6'
+
     // Encode data for the call to initialize
     let initializeData = encodeCall(
       'initialize',
       ['address', 'address'],
-      [token.address, treasuryAddress])
+      [tokenAddress, treasuryAddress])
+
+    let contractDeployer = accounts[0]
 
     // Initialize staking proxy
     await ownedUpgradeabilityProxy.upgradeToAndCall(
       staking.address,
       initializeData,
-      { from: versionerAddress })
+      { from: contractDeployer })
   })
 }
