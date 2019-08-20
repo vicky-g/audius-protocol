@@ -17,8 +17,6 @@ const Playlist = require('./api/playlist')
 const File = require('./api/file')
 const ServiceProvider = require('./api/serviceProvider')
 
-const DEFAULT_IPFS_GATEWAY = 'https://creatornode.audius.co/ipfs/'
-
 class AudiusLibs {
   /**
    * Configures a discovery provider wrapper
@@ -96,14 +94,6 @@ class AudiusLibs {
   }
 
   /**
-   * Configures a default IPFS gateway to use.
-   * @param {string} gateway e.g. 'https://ipfs.io/ipfs/'
-   */
-  static configIpfs (gateway = DEFAULT_IPFS_GATEWAY) {
-    return { gateway }
-  }
-
-  /**
    * Constructs an Audius Libs instance with configs.
    * Unless default-valued, all configs are optional.
    * @example
@@ -119,7 +109,6 @@ class AudiusLibs {
     identityServiceConfig,
     discoveryProviderConfig,
     creatorNodeConfig,
-    ipfsConfig = AudiusLibs.configIpfs(),
     isServer
   }) {
     this.ethWeb3Config = ethWeb3Config
@@ -127,7 +116,6 @@ class AudiusLibs {
     this.identityServiceConfig = identityServiceConfig
     this.creatorNodeConfig = creatorNodeConfig
     this.discoveryProviderConfig = discoveryProviderConfig
-    this.ipfsConfig = ipfsConfig
     this.isServer = isServer
 
     this.AudiusABIDecoder = AudiusABIDecoder
@@ -142,7 +130,6 @@ class AudiusLibs {
     this.web3Manager = null
     this.contracts = null
     this.creatorNode = null
-    this.ipfsGateway = null
 
     // API
     this.Account = null
@@ -155,7 +142,6 @@ class AudiusLibs {
   /** Init services based on presence of a relevant config. */
   async init () {
     this.userStateManager = new UserStateManager()
-    this.ipfsGateway = this.ipfsConfig.gateway
     this.web3Config = await this.web3Config
 
     /** Identity Service */
@@ -251,8 +237,7 @@ class AudiusLibs {
       this.ethWeb3Manager,
       this.ethContracts,
       this.creatorNode,
-      this.isServer,
-      this.ipfsGateway
+      this.isServer
     ]
     this.User = new User(...services)
     this.Account = new Account(this.User, ...services)

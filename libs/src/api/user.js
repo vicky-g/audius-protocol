@@ -261,6 +261,9 @@ class Users extends Base {
       // Force the new primary creator node to sync from the currently connected node.
       // TODO: The currently connected node here should be a USER-ONLY node.
       const newPrimaryCreatorNode = CreatorNodeService.getPrimary(oldMetadata.creator_node_endpoint)
+
+      
+
       if (newPrimaryCreatorNode !== this.creatorNode.getEndpoint()) {
         await this.creatorNode.forceSync(newPrimaryCreatorNode)
         await this.creatorNode.setEndpoint(newPrimaryCreatorNode)
