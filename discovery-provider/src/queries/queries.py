@@ -17,9 +17,7 @@ from src.queries.query_helpers import get_current_user_id, parse_sort_param, pop
 
 logger = logging.getLogger(__name__)
 bp = Blueprint("queries", __name__)
-
 trackDedupeMaxMinutes = 10
-
 
 ######## ROUTES ########
 

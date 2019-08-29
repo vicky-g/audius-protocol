@@ -15,6 +15,8 @@ import redis
 from flask import Flask
 from flask.json import JSONEncoder
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 import alembic
 import alembic.config  # pylint: disable=E0611
@@ -233,11 +235,19 @@ def configure_flask(test_config, app, mode="app"):
         app.config.update(test_config)
 
     exceptions.register_exception_handlers(app)
+
+    limiter = Limiter(
+        app,
+        key_func=get_remote_address,
+        default_limits=[]
+    )
+    # TEST VALUE - will be updated after some more insight
+    limiter.limit("5/hour")(queries.bp)
+
     app.register_blueprint(queries.bp)
     app.register_blueprint(search.bp)
     app.register_blueprint(health_check.bp)
     return app
-
 
 def configure_celery(flask_app, celery, test_config=None):
     database_url = shared_config["db"]["url"]
