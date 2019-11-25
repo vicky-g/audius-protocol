@@ -21,6 +21,8 @@ function requestNotExcludedFromLogging (url) {
 }
 
 function loggingMiddleware (req, res, next) {
+  req.startHrTime = process.hrtime()
+
   const requestID = shortid.generate()
   req.logger = logger.child({
     requestID: requestID,

@@ -18,8 +18,12 @@ module.exports.handleResponse = (func) => {
 }
 
 const sendResponse = module.exports.sendResponse = (req, res, resp) => {
+  const elapsedHrTime = req.startHrTime ? process.hrtime(req.startHrTime) : null
+  const duration = elapsedHrTime ? elapsedHrTime[0] * 1000 + elapsedHrTime[1] / 1e6 : null
+
   let logger = req.logger.child({
-    statusCode: resp.statusCode
+    statusCode: resp.statusCode,
+    ...(duration ? { duration } : {})
   })
   if (resp.statusCode === 200) {
     if (requestNotExcludedFromLogging(req.originalUrl)) {
