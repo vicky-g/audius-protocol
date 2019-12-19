@@ -229,7 +229,7 @@ module.exports = function (app) {
   /*
    * Fetches the notifications for the specified userId
    * urlQueryParam: {number} limit        Max number of notifications to return, Cannot exceed 100
-   * urlQueryParam: {number?} timeOffset  A timestamp reference offset for fetch notification before this date
+   * urlQueryParam: {number?} timeOffset  A timestamp reference offset for fetch notification after this date
    *
    * TODO: Validate userId
    * NOTE: The `createdDate` param can/should be changed to the user sending their wallet &
@@ -283,19 +283,20 @@ module.exports = function (app) {
       const viewedAnnouncementCount = viewedAnnouncements.length
 
       const filteredViewedAnnouncements = viewedAnnouncements
-        .filter(a => moment(a.createdAt).isAfter(createdDate))
-        .filter(a => timeOffset.isAfter(moment(a.createdAt)))
+        .filter(a => moment(a.createdAt).isAfter(createdDate) && moment(a.createdAt).isAfter(timeOffset))
+
+      const viewedAnnouncementIds = new Set([...(viewedAnnouncements.map(a => a.entityId))])
 
       const announcements = app.get('announcements')
       const validUserAnnouncements = announcements
-        .filter(a => moment(a.datePublished).isAfter(createdDate))
-      const announcementsAfterFilter = validUserAnnouncements
-        .filter(a => timeOffset.isAfter(moment(a.datePublished)))
+        .filter(a => moment(a.datePublished).isAfter(createdDate) && !viewedAnnouncementIds.has(a.entityId))
+      const validUnreadAnnouncements = validUserAnnouncements
+        .filter(a => moment(a.datePublished).isAfter(timeOffset))
 
       const unreadAnnouncementCount = validUserAnnouncements.length - viewedAnnouncementCount
       const userNotifications = formatNotifications(
         notifications.concat(filteredViewedAnnouncements),
-        announcementsAfterFilter
+        validUnreadAnnouncements
       )
 
       return successResponse({
