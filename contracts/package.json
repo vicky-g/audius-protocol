@@ -33,7 +33,8 @@
     "ethlint": "^1.2.3",
     "fs-extra": "^7.0.0",
     "openzeppelin-solidity": "^2.1.0",
-    "truffle": "5.0.42"
+    "truffle": "5.0.42",
+    "truffle-flattener": "^1.4.2"
   },
   "devDependencies": {
     "async": "^2.6.1",
