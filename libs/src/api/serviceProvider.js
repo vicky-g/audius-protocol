@@ -81,36 +81,44 @@ class ServiceProvider extends Base {
     if (blacklist) {
       creatorNodes = creatorNodes.filter(node => !blacklist.has(node.endpoint))
     }
-
-    // Filter to healthy nodes
-    creatorNodes = (await Promise.all(
+    
+    // Get sync status for all nodes and filter out unhealthy (unresponsive) nodes.
+    const healthyCreatorNodesSyncStatus = {}
+    await Promise.all(
       creatorNodes.map(async node => {
         try {
-          const { isBehind, isConfigured } = await this.creatorNode.getSyncStatus(node.endpoint)
-          return isConfigured && isBehind ? false : node.endpoint
+          const syncStatus = await this.creatorNode.getSyncStatus(node.endpoint)
+          healthyCreatorNodesSyncStatus[node] = syncStatus
         } catch (e) {
-          return false
+          // Ignore unhealthy nodes.
+          console.error(`get sync status failed ${node.endpoint}`)
         }
       })
-    ))
-      .filter(Boolean)
+    )
+    const healthyCreatorNodes = Object.keys(healthyCreatorNodesSyncStatus)
 
-    // Time requests and autoselect nodes
+    // Time requests and autoselect nodes.
     const timings = await Utils.timeRequests(
-      creatorNodes.map(node => ({
+      healthyCreatorNodes.map(node => ({
         id: node,
         url: `${node}/version`
       }))
     )
 
+    // Nodes version info object.
     let services = {}
     timings.forEach(timing => {
       services[timing.request.id] = timing.response.data
     })
-    // Primary: select the lowest-latency
-    const primary = timings[0] ? timings[0].request.id : null
 
-    // Secondaries: select randomly
+    // Select primary that is either unconfigured or configured & notBehind
+    const primaryOptions = timings.filter(timingResp => {
+      const syncStatus = healthyCreatorNodesSyncStatus[timingResp.request.id]
+      return !(syncStatus.isConfigured && syncStatus.isBehind)
+    })
+    const primary = primaryOptions[0] ? primaryOptions[0].request.id : null
+
+    // Select secondaries randomly.
     // TODO: Implement geolocation-based selection
     const secondaries = _.sampleSize(timings.slice(1), numberOfNodes - 1)
       .map(timing => timing.request.id)
